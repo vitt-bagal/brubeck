@@ -29,19 +29,25 @@ static void update_proctitle(struct brubeck_server *server) {
 
   PUTS("[%s] [ " UTF8_UPARROW, server->config_name);
 
+  double bytes_sent = 0.;
+  bool connected = false;
   for (i = 0; i < server->active_backends; ++i) {
     struct brubeck_backend *backend = server->backends[i];
     if (backend->type == BRUBECK_BACKEND_CARBON) {
       struct brubeck_carbon *carbon = (struct brubeck_carbon *)backend;
-      double sent = carbon->sent;
-
-      for (j = 0; j < 7 && sent >= 1024.0; ++j)
-        sent /= 1024.0;
-
-      PUTS("%s #%d %.1f%s%s", (i > 0) ? "," : "", i + 1, sent, size_suffix[j],
-           (carbon->out_sock >= 0) ? "" : " (dc)");
+      bytes_sent += (double)carbon->bytes_sent;
+      connected = connected || carbon->out_sock >= 0;
+    } else if (backend->type == BRUBECK_BACKEND_KAFKA) {
+      struct brubeck_kafka *kafka = (struct brubeck_kafka *)backend;
+      bytes_sent += (double)kafka->bytes_sent;
+      connected = connected || kafka->connected;
     }
   }
+  for (j = 0; j < 7 && bytes_sent >= 1024.0; ++j)
+    bytes_sent /= 1024.0;
+
+  PUTS("%s #%d %.1f%s%s", (i > 0) ? "," : "", i + 1, bytes_sent, size_suffix[j],
+       connected ? "" : " (dc)");
 
   PUTS(" ] [ " UTF8_DOWNARROW);
 
@@ -96,10 +102,16 @@ static void load_backends(struct brubeck_server *server, json_t *backends) {
     if (type && !strcmp(type, "carbon")) {
       backend = brubeck_carbon_new(server, b, server->active_backends);
       server->backends[server->active_backends++] = backend;
+    } else if (type && !strcmp(type, "kafka")) {
+      backend = brubeck_kafka_new(server, b, server->active_backends);
+      server->backends[server->active_backends++] = backend;
+
     } else {
       log_splunk("backend=%s event=invalid_backend", type);
     }
   }
+  if (server->active_backends == 0)
+    die("no backends were loaded");
 }
 
 static void load_samplers(struct brubeck_server *server, json_t *samplers) {

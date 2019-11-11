@@ -17,7 +17,7 @@ struct brubeck_carbon {
     uint16_t pos;
     uint16_t pt;
   } pickler;
-  size_t sent;
+  size_t bytes_sent;
 };
 
 struct brubeck_backend *brubeck_carbon_new(struct brubeck_server *server,

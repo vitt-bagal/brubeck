@@ -114,8 +114,16 @@ static struct MHD_Response *send_stats(struct brubeck_server *brubeck) {
                     "connected", (carbon->out_sock >= 0), "address",
                     inet_ntop(AF_INET, &address->sin_addr.s_addr, addr,
                               INET_ADDRSTRLEN),
-                    "port", (int)ntohs(address->sin_port), "sent",
-                    (json_int_t)carbon->sent));
+                    "port", (int)ntohs(address->sin_port), "bytes_sent",
+                    (json_int_t)carbon->bytes_sent));
+    }
+    if (backend->type == BRUBECK_BACKEND_KAFKA) {
+      struct brubeck_kafka *kafka = (struct brubeck_kafka *)backend;
+      json_array_append_new(
+          backends, json_pack("{s:s, s:i, s:b, s:I}", "type", "kafka",
+                              "sample_freq", (int)kafka->backend.sample_freq,
+                              "connected", kafka->connected, "bytes_sent",
+                              (json_int_t)kafka->bytes_sent));
     }
   }
 

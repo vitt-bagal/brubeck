@@ -1,7 +1,7 @@
 #ifndef __BRUBECK_BACKEND_H__
 #define __BRUBECK_BACKEND_H__
 
-enum brubeck_backend_t { BRUBECK_BACKEND_CARBON };
+enum brubeck_backend_t { BRUBECK_BACKEND_CARBON, BRUBECK_BACKEND_KAFKA };
 
 struct brubeck_backend {
   enum brubeck_backend_t type;
@@ -29,11 +29,14 @@ brubeck_backend_name(struct brubeck_backend *backend) {
   switch (backend->type) {
   case BRUBECK_BACKEND_CARBON:
     return "carbon";
+  case BRUBECK_BACKEND_KAFKA:
+    return "kafka";
   default:
     return NULL;
   }
 }
 
 #include "backends/carbon.h"
+#include "backends/kafka.h"
 
 #endif
