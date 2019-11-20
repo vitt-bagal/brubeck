@@ -1,7 +1,11 @@
 # Brubeck
 
+[![Build Status](https://travis-ci.org/lukepalmer/brubeck.svg?branch=master)](https://travis-ci.org/lukepalmer/brubeck)
+
 Brubeck is a [statsd](https://github.com/etsy/statsd)-compatible stats
 aggregator written in C.
+
+This is a maintained fork of the excellent [brubeck by github](https://github.com/github/brubeck) which is no longer maintained.
 
 ## What is statsd?
 
