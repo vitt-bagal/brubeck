@@ -4,10 +4,10 @@
 #include <stdint.h>
 
 struct multibloom {
-	int bits;
-	int bytes;
-	int hashes;
-	unsigned char *filters[];
+  int bits;
+  int bytes;
+  int hashes;
+  unsigned char *filters[];
 };
 
 int multibloom_check(struct multibloom *bloom, int f, uint32_t a, uint32_t b);

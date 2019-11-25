@@ -7,15 +7,15 @@
 #define NODE_SIZE (SLAB_SIZE * (SLABS_PER_NODE - 1))
 
 struct brubeck_slab_node {
-	struct brubeck_slab_node *next;
-	size_t alloc;
-	char heap[];
+  struct brubeck_slab_node *next;
+  size_t alloc;
+  char heap[];
 };
 
 struct brubeck_slab {
-	struct brubeck_slab_node *current;
-	size_t total_alloc;
-	pthread_mutex_t lock;
+  struct brubeck_slab_node *current;
+  size_t total_alloc;
+  pthread_mutex_t lock;
 };
 
 void brubeck_slab_init(struct brubeck_slab *slab);
