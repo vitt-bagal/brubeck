@@ -126,7 +126,22 @@ The JSON file can contain the following sections:
         under enough load. Pickles are much softer CPU-wise on the Carbon relays,
         aggregators and caches.
 
-        Hmmmm pickles. Now I'm hungry. Lincoln when's lunch?
+    - `kafka`: a backend that creates json documents compatible with
+        logstash / elasticsearch and writes them to a kafka
+        topic. Kafka configuration is accomplished by directly
+        supplying arguments to librdkafka, [specified
+        here](https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md).
+
+        ```
+        {
+          "type" : "kafka",
+          "frequency" : 1,
+          "topic" : "my.stats",
+          "rdkafka_config" : {
+             "bootstrap.servers" : "kafkaserver1:9094,kafkaserver2:9094"
+          }
+        }
+        ```
 
 - `samplers`: an array of the different samplers to load. Samplers run on parallel and gather
 incoming metrics from the network.
