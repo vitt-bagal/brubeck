@@ -66,7 +66,7 @@ static void plaintext_each(const char *key, value_t value, void *backend) {
     return;
   }
 
-  carbon->sent += wr;
+  carbon->bytes_sent += wr;
 }
 
 static inline size_t pickle1_int32(char *ptr, void *_src) {
@@ -156,7 +156,7 @@ static void pickle1_flush(void *backend) {
     return;
   }
 
-  carbon->sent += wr;
+  carbon->bytes_sent += wr;
 }
 
 static void pickle1_each(const char *key, value_t value, void *backend) {
