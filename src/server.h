@@ -28,6 +28,12 @@ struct brubeck_server {
   int active_backends;
   int active_samplers;
 
+  /* Optionally build a fancy process title at the expense of clobbering
+     environ. Can be disabled in the case where an external processes (such as a
+     job scheduler)  must be able to read an unaltered /proc/environ.
+  */
+  bool set_proctitle;
+
   int fd_signal;
   int fd_expire;
   int fd_update;

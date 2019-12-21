@@ -22,43 +22,46 @@ static void update_flows(struct brubeck_server *server) {
 #define UTF8_DOWNARROW "\xE2\x86\x93"
 
 static void update_proctitle(struct brubeck_server *server) {
-  static const char *size_suffix[] = {"b", "kb", "mb", "gb", "tb", "pb", "eb"};
+  if (true || server->set_proctitle) {
+    static const char *size_suffix[] = {"b",  "kb", "mb", "gb",
+                                        "tb", "pb", "eb"};
 #define PUTS(...) pos += snprintf(buf + pos, sizeof(buf) - pos, __VA_ARGS__)
-  char buf[2048];
-  int i, j, pos = 0;
+    char buf[2048];
+    int i, j, pos = 0;
 
-  PUTS("[%s] [ " UTF8_UPARROW, server->config_name);
+    PUTS("[%s] [ " UTF8_UPARROW, server->config_name);
 
-  double bytes_sent = 0.;
-  bool connected = false;
-  for (i = 0; i < server->active_backends; ++i) {
-    struct brubeck_backend *backend = server->backends[i];
-    if (backend->type == BRUBECK_BACKEND_CARBON) {
-      struct brubeck_carbon *carbon = (struct brubeck_carbon *)backend;
-      bytes_sent += (double)carbon->bytes_sent;
-      connected = connected || carbon->out_sock >= 0;
-    } else if (backend->type == BRUBECK_BACKEND_KAFKA) {
-      struct brubeck_kafka *kafka = (struct brubeck_kafka *)backend;
-      bytes_sent += (double)kafka->bytes_sent;
-      connected = connected || kafka->connected;
+    double bytes_sent = 0.;
+    bool connected = false;
+    for (i = 0; i < server->active_backends; ++i) {
+      struct brubeck_backend *backend = server->backends[i];
+      if (backend->type == BRUBECK_BACKEND_CARBON) {
+        struct brubeck_carbon *carbon = (struct brubeck_carbon *)backend;
+        bytes_sent += (double)carbon->bytes_sent;
+        connected = connected || carbon->out_sock >= 0;
+      } else if (backend->type == BRUBECK_BACKEND_KAFKA) {
+        struct brubeck_kafka *kafka = (struct brubeck_kafka *)backend;
+        bytes_sent += (double)kafka->bytes_sent;
+        connected = connected || kafka->connected;
+      }
     }
+    for (j = 0; j < 7 && bytes_sent >= 1024.0; ++j)
+      bytes_sent /= 1024.0;
+
+    PUTS("%s #%d %.1f%s%s", (i > 0) ? "," : "", i + 1, bytes_sent,
+         size_suffix[j], connected ? "" : " (dc)");
+
+    PUTS(" ] [ " UTF8_DOWNARROW);
+
+    for (i = 0; i < server->active_samplers; ++i) {
+      struct brubeck_sampler *sampler = server->samplers[i];
+      PUTS("%s :%d %d/s", (i > 0) ? "," : "",
+           (int)ntohs(sampler->addr.sin_port), (int)sampler->current_flow);
+    }
+
+    PUTS(" ]");
+    setproctitle("brubeck", buf);
   }
-  for (j = 0; j < 7 && bytes_sent >= 1024.0; ++j)
-    bytes_sent /= 1024.0;
-
-  PUTS("%s #%d %.1f%s%s", (i > 0) ? "," : "", i + 1, bytes_sent, size_suffix[j],
-       connected ? "" : " (dc)");
-
-  PUTS(" ] [ " UTF8_DOWNARROW);
-
-  for (i = 0; i < server->active_samplers; ++i) {
-    struct brubeck_sampler *sampler = server->samplers[i];
-    PUTS("%s :%d %d/s", (i > 0) ? "," : "", (int)ntohs(sampler->addr.sin_port),
-         (int)sampler->current_flow);
-  }
-
-  PUTS(" ]");
-  setproctitle("brubeck", buf);
 }
 
 static void expire_metric(struct brubeck_metric *mt, void *_) {
@@ -220,8 +223,6 @@ static void load_config(struct brubeck_server *server, const char *path) {
 }
 
 void brubeck_server_init(struct brubeck_server *server, const char *config) {
-  memset(server, 0x0, sizeof(struct brubeck_server));
-
   /* ignore SIGPIPE here so we don't crash when
    * backends get disconnected */
   signal(SIGPIPE, SIG_IGN);
