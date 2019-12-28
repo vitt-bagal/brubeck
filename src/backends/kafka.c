@@ -122,11 +122,12 @@ static void kafka_flush(void *backend) {
   rd_kafka_resp_err_t err;
   char *buf;
   size_t len;
-  long epoch_ms;
+  int64_t epoch_ms;
 
   if (self->doc_is_dirty) {
     self->doc_is_dirty = false;
-    epoch_ms = self->backend.tick_time * 1000;
+    epoch_ms = (int64_t) self->backend.tick_time;
+    epoch_ms *= 1000;
     json_object_set_new_nocheck(self->json, "@timestamp",
                                 json_integer(epoch_ms));
 
