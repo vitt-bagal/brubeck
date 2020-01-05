@@ -110,7 +110,7 @@ static int kafka_connect(void *backend) {
     return -1;
 }
 
-static void each_metric(const char *key, value_t value, void *backend) {
+static void each_metric(const struct brubeck_metric* metric, const char *key, value_t value, void *backend) {
   struct brubeck_kafka *self = (struct brubeck_kafka *)backend;
 
   json_object_set_new_nocheck(self->json, key, json_real(value));

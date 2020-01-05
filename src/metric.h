@@ -52,7 +52,7 @@ struct brubeck_metric {
   char key[];
 };
 
-typedef void (*brubeck_sample_cb)(const char *key, value_t value,
+typedef void (*brubeck_sample_cb)(const struct brubeck_metric *metric, const char *key, value_t value,
                                   void *backend);
 
 void brubeck_metric_sample(struct brubeck_metric *metric, brubeck_sample_cb cb,

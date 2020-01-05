@@ -40,7 +40,7 @@ static void carbon_disconnect(struct brubeck_carbon *self) {
   self->out_sock = -1;
 }
 
-static void plaintext_each(const char *key, value_t value, void *backend) {
+static void plaintext_each(const struct brubeck_metric* metric, const char *key, value_t value, void *backend) {
   struct brubeck_carbon *carbon = (struct brubeck_carbon *)backend;
   char buffer[1024];
   char *ptr = buffer;
@@ -159,7 +159,7 @@ static void pickle1_flush(void *backend) {
   carbon->bytes_sent += wr;
 }
 
-static void pickle1_each(const char *key, value_t value, void *backend) {
+static void pickle1_each(const struct brubeck_metric* metric, const char *key, value_t value, void *backend) {
   struct brubeck_carbon *carbon = (struct brubeck_carbon *)backend;
   uint8_t key_len = (uint8_t)strlen(key);
 
