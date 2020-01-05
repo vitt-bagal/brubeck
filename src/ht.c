@@ -28,7 +28,8 @@ brubeck_hashtable_t *brubeck_hashtable_new(const uint64_t size) {
   return ht;
 }
 
-void brubeck_hashtable_free(brubeck_hashtable_t *ht) { /* no-op */ }
+void brubeck_hashtable_free(brubeck_hashtable_t *ht) { /* no-op */
+}
 
 struct brubeck_metric *brubeck_hashtable_find(brubeck_hashtable_t *ht,
                                               const char *key,

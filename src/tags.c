@@ -35,8 +35,9 @@ bool parse_tag(char *kv_str, struct brubeck_tag *tag) {
 
 const struct brubeck_tags *brubeck_parse_tags(const char *name) {
   char *state, *tok;
-  
-  tok = strchr(name,char_delim);
+
+  // CR lpalmer: I don't need to take the whole name here because we will already need to have it separated out for hash lookup
+  tok = strchr(name, char_delim);
 
   uint16_t num_possible_tags = tok ? count_char_in_str(tok, char_assoc) : 0;
 
@@ -45,15 +46,15 @@ const struct brubeck_tags *brubeck_parse_tags(const char *name) {
   struct brubeck_tags *tags = malloc(alloc_size);
   memset(tags, 0x0, alloc_size);
 
-  if(tok){
+  if (tok) {
     tags->tag_len = strlen(tok);
-    strncpy(buf,tok,TAG_BUF_SIZE); 
+    strncpy(buf, tok, TAG_BUF_SIZE);
     for (tok = strtok_r(buf, str_delim, &state); tok;
          tok = strtok_r(NULL, str_delim, &state)) {
       if (parse_tag(tok, &(tags->tags[tags->num_tags]))) {
         ++(tags->num_tags);
       }
     }
-}
+  }
   return tags;
 }

@@ -38,9 +38,9 @@ void test_tags(void) {
   check_parse("s,junk,=,junk=,=junk",
               &(struct brubeck_tags){.tag_len = 19, .num_tags = 0},
               (struct brubeck_tag[]){});
-  check_parse("s,foo===bar", &(struct brubeck_tags){.tag_len = 10, .num_tags = 1},
+  check_parse("s,foo===bar",
+              &(struct brubeck_tags){.tag_len = 10, .num_tags = 1},
               (struct brubeck_tag[]){{"foo", "bar"}});
   check_parse("foo=bar,", &(struct brubeck_tags){.tag_len = 1, .num_tags = 0},
               (struct brubeck_tag[]){});
-
 }
