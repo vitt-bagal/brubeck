@@ -110,7 +110,8 @@ static int kafka_connect(void *backend) {
     return -1;
 }
 
-static void each_metric(const struct brubeck_metric* metric, const char *key, value_t value, void *backend) {
+static void each_metric(const struct brubeck_metric *metric, const char *key,
+                        value_t value, void *backend) {
   struct brubeck_kafka *self = (struct brubeck_kafka *)backend;
 
   json_object_set_new_nocheck(self->json, key, json_real(value));
@@ -126,7 +127,7 @@ static void kafka_flush(void *backend) {
 
   if (self->doc_is_dirty) {
     self->doc_is_dirty = false;
-    epoch_ms = (int64_t) self->backend.tick_time;
+    epoch_ms = (int64_t)self->backend.tick_time;
     epoch_ms *= 1000;
     json_object_set_new_nocheck(self->json, "@timestamp",
                                 json_integer(epoch_ms));

@@ -28,6 +28,7 @@ SOURCES = \
 	src/server.c \
 	src/setproctitle.c \
 	src/slab.c \
+	src/tags.c \
 	src/utils.c
 
 ifndef BRUBECK_NO_HTTP
