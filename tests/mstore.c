@@ -33,7 +33,8 @@ void test_mstore__save(void) {
 
   sput_fail_unless(i == nmetrics, "stored 15000 metrics in table");
 
-  for (i = 0; i < nmetrics; ++i) {
+  // +1 to exercise not finding the key
+  for (i = 0; i < nmetrics + 1; ++i) {
     char buffer[64];
     uint16_t len;
 
