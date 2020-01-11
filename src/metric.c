@@ -21,10 +21,6 @@ static inline struct brubeck_metric *new_metric(struct brubeck_server *server,
 
 #ifdef BRUBECK_METRICS_FLOW
   metric->flow = 0;
-#else
-  /* Compile time assert: ensure that the metric struct can be packed
-   * in a single slab */
-  ct_assert(sizeof(struct brubeck_metric) <= (SLAB_SIZE));
 #endif
 
   return metric;
