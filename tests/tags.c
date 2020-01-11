@@ -1,15 +1,23 @@
 #include "tags.h"
 #include "sput.h"
 
-static void check_equal(const struct brubeck_tag_set *x,
-                        const struct brubeck_tag_set *y, const char *source) {
-  sput_fail_if((x && !y) || (y && !x), source);
-  sput_fail_unless(y->num_tags == x->num_tags, source);
-  sput_fail_unless(y->tag_len == x->tag_len, source);
+static void check_tags_equal(const struct brubeck_tag_set *x,
+                             const struct brubeck_tag_set *y,
+                             const char *description) {
+  sput_fail_unless(y->num_tags == x->num_tags, description);
   for (int i = 0; i < y->num_tags; ++i) {
-    sput_fail_unless(strcmp(x->tags[i].key, y->tags[i].key) == 0, source);
-    sput_fail_unless(strcmp(x->tags[i].value, y->tags[i].value) == 0, source);
+    sput_fail_unless(strcmp(x->tags[i].key, y->tags[i].key) == 0, description);
+    sput_fail_unless(strcmp(x->tags[i].value, y->tags[i].value) == 0,
+                     description);
   }
+}
+
+static void check_equal(const struct brubeck_tag_set *x,
+                        const struct brubeck_tag_set *y,
+                        const char *description) {
+  sput_fail_if((x && !y) || (y && !x), description);
+  sput_fail_unless(y->tag_len == x->tag_len, description);
+  check_tags_equal(x, y, description);
 }
 
 const struct brubeck_tag_set *parse(const char *source) {
@@ -79,11 +87,17 @@ void test_tag_storage(void) {
   t1 = get_tag_set(tags, str);
   sput_fail_if(t1 == NULL, "not null");
   check_equal(t1, parse(str), str);
+  sput_fail_unless(t1->index == 0, "index");
 
   t2 = get_tag_set(tags, str);
   sput_fail_if(t2 == NULL, "not null");
   check_equal(t2, parse(str), str);
   sput_fail_unless(t1 == t2, "caching");
 
-  // test multiple outputs same except index
+  // An expected behavior nuance: A different string that is logically
+  // equivalent results in a physically different tag set having all
+  // members the same except for the index
+  t2 = get_tag_set(tags, "foo=bar,");
+  sput_fail_unless(t2->index == 1, "index");
+  check_tags_equal(t1, t2, "equivalent except index");
 }
