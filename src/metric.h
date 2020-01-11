@@ -28,6 +28,7 @@ enum {
 
 struct brubeck_metric {
   struct brubeck_metric *next;
+  struct brubeck_tag_set *tags;
 
 #ifdef BRUBECK_METRICS_FLOW
   uint64_t flow;

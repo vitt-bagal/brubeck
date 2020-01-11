@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
   sput_enter_suite("tags: associative key value parsing");
   sput_run_test(test_tag_parsing);
   sput_run_test(test_tag_storage);
+  sput_run_test(test_tag_offset);
 
   sput_finish_testing();
   return sput_get_return_value();

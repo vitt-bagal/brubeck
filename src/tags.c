@@ -66,6 +66,18 @@ struct brubeck_tag_set *brubeck_tags_find(brubeck_tags_t *tags, const char *key,
   return NULL;
 }
 
+const uint16_t brubeck_tag_offset(const char *str) {
+  uint16_t offset = 0;
+  while (*str) {
+    // Support both InfluxDB and Librato tag formats
+    if (*str == ',' || *str == '#')
+      return offset;
+    ++offset;
+    ++str;
+  }
+  return BRUBECK_NO_TAG_OFFSET;
+}
+
 const uint16_t count_char_in_str(const char *str, char c) {
   uint16_t count;
   for (count = 0; str[count]; str[count] == c ? count++ : c++)

@@ -101,3 +101,14 @@ void test_tag_storage(void) {
   sput_fail_unless(t2->index == 1, "index");
   check_tags_equal(t1, t2, "equivalent except index");
 }
+
+void check_tag_offset(const char *str, const uint16_t offset) {
+  sput_fail_unless(brubeck_tag_offset(str) == offset, str);
+}
+
+void test_tag_offset(void) {
+  check_tag_offset("", BRUBECK_NO_TAG_OFFSET);
+  check_tag_offset("no.tags", BRUBECK_NO_TAG_OFFSET);
+  check_tag_offset("has.tags,foo=bar,baz=42", 8);
+  check_tag_offset("has.tags#foo=bar,baz=42", 8);
+}
