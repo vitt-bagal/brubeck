@@ -68,14 +68,11 @@ struct brubeck_tag_set *brubeck_tags_find(brubeck_tags_t *tags, const char *key,
 
 const uint16_t brubeck_tag_offset(const char *str) {
   uint16_t offset = 0;
-  while (*str) {
-    // Support both InfluxDB and Librato tag formats
-    if (*str == ',' || *str == '#')
-      return offset;
-    ++offset;
+  // Support both InfluxDB and Librato tag formats
+  for (offset = 0; *str && *str != ',' && *str != '#'; ++offset) {
     ++str;
   }
-  return BRUBECK_NO_TAG_OFFSET;
+  return offset;
 }
 
 const uint16_t count_char_in_str(const char *str, char c) {
@@ -124,16 +121,14 @@ struct brubeck_tag_set *brubeck_parse_tags(char *tag_str,
   return tag_set;
 }
 
-const struct brubeck_tag_set *brubeck_get_tag_set(struct brubeck_tags_t *tags,
-                                                  const char *tag_str,
-                                                  uint16_t tag_str_len) {
+const struct brubeck_tag_set *
+brubeck_get_tag_set_of_tag_str(struct brubeck_tags_t *tags, const char *tag_str,
+                               uint16_t tag_str_len) {
   struct brubeck_tag_set *tag_set;
-
   tag_set = brubeck_tags_find(tags, tag_str, tag_str_len);
 
   if (tag_set == NULL) {
-    char *tag_str_copy = malloc(sizeof(char) * tag_str_len);
-    strncpy(tag_str_copy, tag_str, tag_str_len);
+    char *tag_str_copy = strdup(tag_str);
     tag_set = brubeck_parse_tags(tag_str_copy, tag_str_len);
     if (!brubeck_tags_insert(tags, tag_str, tag_str_len, tag_set)) {
       free(tag_str_copy);
@@ -143,4 +138,14 @@ const struct brubeck_tag_set *brubeck_get_tag_set(struct brubeck_tags_t *tags,
   }
 
   return tag_set;
+}
+
+const struct brubeck_tag_set *brubeck_get_tag_set(struct brubeck_tags_t *tags,
+                                                  const char *key_str,
+                                                  uint16_t key_len) {
+  uint16_t tag_offset;
+  tag_offset = brubeck_tag_offset(key_str);
+
+  return brubeck_get_tag_set_of_tag_str(tags, key_str + tag_offset,
+                                        key_len - tag_offset);
 }

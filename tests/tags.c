@@ -53,6 +53,9 @@ void test_tag_parsing(void) {
   check_parse(",foo=bar",
               &(struct brubeck_tag_set){.tag_len = 8, .num_tags = 1},
               (struct brubeck_tag[]){{.key = "foo", .value = "bar"}});
+  check_parse(",foo=bar,",
+              &(struct brubeck_tag_set){.tag_len = 9, .num_tags = 1},
+              (struct brubeck_tag[]){{.key = "foo", .value = "bar"}});
   check_parse("s,foo=bar,baz=42",
               &(struct brubeck_tag_set){.tag_len = 16, .num_tags = 2},
               (struct brubeck_tag[]){{"foo", "bar"}, {"baz", "42"}});
@@ -83,21 +86,21 @@ void test_tag_storage(void) {
   const struct brubeck_tag_set *t1, *t2;
   const char *str;
 
-  str = "foo=bar";
+  str = "s,foo=bar";
   t1 = get_tag_set(tags, str);
   sput_fail_if(t1 == NULL, "not null");
-  check_equal(t1, parse(str), str);
+  check_equal(t1, parse(",foo=bar"), str);
   sput_fail_unless(t1->index == 0, "index");
 
   t2 = get_tag_set(tags, str);
   sput_fail_if(t2 == NULL, "not null");
-  check_equal(t2, parse(str), str);
+  check_equal(t2, parse(",foo=bar"), str);
   sput_fail_unless(t1 == t2, "caching");
 
   // An expected behavior nuance: A different string that is logically
   // equivalent results in a physically different tag set having all
   // members the same except for the index
-  t2 = get_tag_set(tags, "foo=bar,");
+  t2 = get_tag_set(tags, "s,foo=bar,");
   sput_fail_unless(t2->index == 1, "index");
   check_tags_equal(t1, t2, "equivalent except index");
 }
@@ -107,8 +110,8 @@ void check_tag_offset(const char *str, const uint16_t offset) {
 }
 
 void test_tag_offset(void) {
-  check_tag_offset("", BRUBECK_NO_TAG_OFFSET);
-  check_tag_offset("no.tags", BRUBECK_NO_TAG_OFFSET);
+  check_tag_offset("", 0);
+  check_tag_offset("no.tags", 7);
   check_tag_offset("has.tags,foo=bar,baz=42", 8);
   check_tag_offset("has.tags#foo=bar,baz=42", 8);
 }
