@@ -12,11 +12,17 @@ static void check_equal(const struct brubeck_tag_set *x,
   }
 }
 
+const struct brubeck_tag_set *parse(const char *source) {
+  char *str;
+  uint16_t len = strlen(source);
+
+  str = strdup(source);
+  return brubeck_parse_tags(str, len);
+}
+
 static void check_parse(const char *source,
                         struct brubeck_tag_set *expected_without_tags,
                         const struct brubeck_tag tag_arr[]) {
-  char str[256];
-  strcpy(str, source);
   struct brubeck_tag_set *expected =
       malloc(sizeof(struct brubeck_tag_set) +
              sizeof(struct brubeck_tag) * expected_without_tags->num_tags);
@@ -24,7 +30,7 @@ static void check_parse(const char *source,
   memcpy(expected->tags, tag_arr,
          sizeof(struct brubeck_tag) * expected_without_tags->num_tags);
 
-  const struct brubeck_tag_set *tags = brubeck_parse_tags(str, strlen(source));
+  const struct brubeck_tag_set *tags = parse(source);
   check_equal(expected, tags, source);
 }
 
@@ -67,23 +73,16 @@ const struct brubeck_tag_set *get_tag_set(struct brubeck_tags_t *tags,
 void test_tag_storage(void) {
   struct brubeck_tags_t *tags = brubeck_tags_create(1024);
   const struct brubeck_tag_set *t1, *t2;
+  const char *str;
 
-  t1 = get_tag_set(tags, "foo=bar");
+  str = "foo=bar";
+  t1 = get_tag_set(tags, str);
   sput_fail_if(t1 == NULL, "not null");
-  sput_fail_unless(t1->num_tags == 1, "num_tags");
-  sput_fail_unless(t1->tag_len == 7, "tag_len");
-  sput_fail_unless(t1->index == 0, "index");
-  sput_fail_unless(strcmp(t1->tags[0].key, "foo") == 0, "key");
-  sput_fail_unless(strcmp(t1->tags[0].value, "bar") == 0, "value");
+  check_equal(t1, parse(str), str);
 
-  t2 = get_tag_set(tags, "foo=bar");
+  t2 = get_tag_set(tags, str);
   sput_fail_if(t2 == NULL, "not null");
-  sput_fail_unless(t2->num_tags == 1, "num_tags");
-  sput_fail_unless(t2->tag_len == 7, "tag_len");
-  sput_fail_unless(t2->index == 0, "index");
-  sput_fail_unless(strcmp(t2->tags[0].key, "foo") == 0, "key");
-  sput_fail_unless(strcmp(t2->tags[0].value, "bar") == 0, "value");
-
+  check_equal(t2, parse(str), str);
   sput_fail_unless(t1 == t2, "caching");
 
   // test multiple outputs same except index

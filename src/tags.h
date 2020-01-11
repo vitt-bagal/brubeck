@@ -18,7 +18,9 @@ struct brubeck_tag_set {
 typedef struct brubeck_tags_t brubeck_tags_t;
 brubeck_tags_t * brubeck_tags_create(const uint64_t size);
 
+// The input string must not be freed until the returned tag set is also freed
 struct brubeck_tag_set *brubeck_parse_tags(char*, uint16_t);
+
 const struct brubeck_tag_set *brubeck_get_tag_set(struct brubeck_tags_t*, const char* tag_str, uint16_t tag_str_len);
 
 #endif
