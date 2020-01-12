@@ -113,6 +113,7 @@ static void load_backends(struct brubeck_server *server, json_t *backends) {
       log_splunk("backend=%s event=invalid_backend", type);
     }
   }
+
   if (server->active_backends == 0)
     die("no backends were loaded");
 }
@@ -191,6 +192,7 @@ static void load_config(struct brubeck_server *server, const char *path) {
   /* optional */
   int expire = 0;
   char *http = NULL;
+  int tag_capacity = 0;
 
   server->name = "brubeck";
   server->config_name = get_config_name(path);
@@ -201,11 +203,11 @@ static void load_config(struct brubeck_server *server, const char *path) {
         error.line, error.column);
   }
 
-  json_unpack_or_die(server->config, "{s?:s, s:s, s:i, s:o, s:o, s?:s, s?:i}",
-                     "server_name", &server->name, "dumpfile",
-                     &server->dump_path, "capacity", &capacity, "backends",
-                     &backends, "samplers", &samplers, "http", &http, "expire",
-                     &expire);
+  json_unpack_or_die(
+      server->config, "{s?:s, s:s, s:i, s?:i, s:o, s:o, s?:s, s?:i}",
+      "server_name", &server->name, "dumpfile", &server->dump_path, "capacity",
+      &capacity, "tag_capacity", &tag_capacity, "backends", &backends,
+      "samplers", &samplers, "http", &http, "expire", &expire);
 
   gh_log_set_instance(server->name);
 
@@ -213,6 +215,12 @@ static void load_config(struct brubeck_server *server, const char *path) {
   if (!server->metrics)
     die("failed to initialize hash table (size: %lu)", 1ul << capacity);
 
+  if (tag_capacity) {
+    server->tags = brubeck_tags_create(1 << tag_capacity);
+    if (!server->tags)
+      die("failed to initialize tags (size: %lu)", 1ul << tag_capacity);
+    log_splunk("event=tagging_initialized");
+  }
   load_backends(server, backends);
   load_samplers(server, samplers);
 

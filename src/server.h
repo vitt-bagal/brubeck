@@ -2,6 +2,7 @@
 #define __BRUBECK_SERVER_H__
 
 #include "slab.h"
+#include "tags.h"
 
 struct brubeck_internal_stats {
   int sample_freq;
@@ -41,6 +42,7 @@ struct brubeck_server {
   struct brubeck_slab slab;
 
   brubeck_hashtable_t *metrics;
+  brubeck_tags_t *tags;
   int at_capacity;
 
   struct brubeck_sampler *samplers[8];

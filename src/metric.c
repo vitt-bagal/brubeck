@@ -23,6 +23,9 @@ static inline struct brubeck_metric *new_metric(struct brubeck_server *server,
   metric->flow = 0;
 #endif
 
+  if (server->tags)
+    metric->tags = brubeck_get_tag_set(server->tags, key, key_len);
+
   return metric;
 }
 
