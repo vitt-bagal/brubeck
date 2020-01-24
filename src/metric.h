@@ -28,7 +28,7 @@ enum {
 
 struct brubeck_metric {
   struct brubeck_metric *next;
-  struct brubeck_tag_set *tags;
+  const struct brubeck_tag_set *tags;
 
 #ifdef BRUBECK_METRICS_FLOW
   uint64_t flow;
@@ -53,7 +53,8 @@ struct brubeck_metric {
   char key[];
 };
 
-typedef void (*brubeck_sample_cb)(const struct brubeck_metric *metric, const char *key, value_t value,
+typedef void (*brubeck_sample_cb)(const struct brubeck_metric *metric,
+                                  const char *key, value_t value,
                                   void *backend);
 
 void brubeck_metric_sample(struct brubeck_metric *metric, brubeck_sample_cb cb,
