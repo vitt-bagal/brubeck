@@ -4,6 +4,14 @@ static inline struct brubeck_metric *new_metric(struct brubeck_server *server,
                                                 const char *key, size_t key_len,
                                                 uint8_t type) {
   struct brubeck_metric *metric;
+  const struct brubeck_tag_set *tags = NULL;
+
+  if (server->tags) {
+    tags = brubeck_get_tag_set(server->tags, key, key_len);
+    if (tags)
+      // we have parsed the tags, remove them from the metric
+      key_len = key_len - tags->tag_len;
+  }
 
   /* slab allocation cannot fail */
   metric = brubeck_slab_alloc(&server->slab,
@@ -11,6 +19,7 @@ static inline struct brubeck_metric *new_metric(struct brubeck_server *server,
 
   memset(metric, 0x0, sizeof(struct brubeck_metric));
 
+  metric->tags = tags;
   memcpy(metric->key, key, key_len);
   metric->key[key_len] = '\0';
   metric->key_len = (uint16_t)key_len;
@@ -22,9 +31,6 @@ static inline struct brubeck_metric *new_metric(struct brubeck_server *server,
 #ifdef BRUBECK_METRICS_FLOW
   metric->flow = 0;
 #endif
-
-  if (server->tags)
-    metric->tags = brubeck_get_tag_set(server->tags, key, key_len);
 
   return metric;
 }
