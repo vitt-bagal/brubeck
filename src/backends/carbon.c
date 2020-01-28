@@ -51,6 +51,11 @@ static void plaintext_each(const struct brubeck_metric *metric, const char *key,
   if (!carbon_is_connected(carbon))
     return;
 
+  if (strchr(key, ' ') != NULL) {
+    /* Invalid metric, can't have a space */
+    return;
+  }
+
   memcpy(ptr, key, key_len);
   ptr += key_len;
   *ptr++ = ' ';
