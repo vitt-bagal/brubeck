@@ -188,4 +188,6 @@
   vec[i] = (value);                                                            \
   vector_set_size((vec), i + 1);
 
+#define vector_get(vec, i) ((i >= vector_size(vec)) ? NULL : vec[i])
+
 #endif

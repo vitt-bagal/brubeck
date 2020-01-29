@@ -168,6 +168,12 @@ static void pickle1_flush(void *backend) {
 static void pickle1_each(const struct brubeck_metric *metric, const char *key,
                          value_t value, void *backend) {
   struct brubeck_carbon *carbon = (struct brubeck_carbon *)backend;
+
+  if (strchr(key, ' ') != NULL) {
+    /* Invalid metric, can't have a space */
+    return;
+  }
+
   uint8_t key_len = (uint8_t)strlen(key);
 
   if (carbon->pickler.pos + PICKLE1_SIZE(key_len) >= PICKLE_BUFFER_SIZE) {

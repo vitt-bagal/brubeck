@@ -4,15 +4,19 @@
 #include <jansson.h>
 #include <librdkafka/rdkafka.h>
 
+struct brubeck_kafka_document {
+  json_t *json;
+  bool doc_is_dirty;
+};
+
 struct brubeck_kafka {
   struct brubeck_backend backend;
 
   rd_kafka_t *rk; /* Producer instance handle */
   bool connected;
-  json_t *json;
-  bool doc_is_dirty;
   const char *topic;
   size_t bytes_sent;
+  struct brubeck_kafka_document **documents; 
 };
 
 struct brubeck_backend *brubeck_kafka_new(struct brubeck_server *server,

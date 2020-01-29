@@ -10,7 +10,11 @@ static int kafka_shutdown(void *backend) {
   rd_kafka_resp_err_t err;
 
   self->connected = false;
-  json_decref(self->json);
+
+  for(struct brubeck_kafka_document **doc = vector_begin(self->documents); doc != vector_end(self->documents); ++doc) {
+    if (*doc != NULL)
+      json_decref((*doc)->json);
+  }
 
   /* Fatal error handling.
    *
