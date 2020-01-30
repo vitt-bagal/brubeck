@@ -90,7 +90,7 @@ void test_tag_storage(void) {
   t1 = get_tag_set(tags, str);
   sput_fail_if(t1 == NULL, "not null");
   check_equal(t1, parse(",foo=bar"), str);
-  sput_fail_unless(t1->index == 0, "index");
+  sput_fail_unless(t1->index == 1, "index");
 
   t2 = get_tag_set(tags, str);
   sput_fail_if(t2 == NULL, "not null");
@@ -101,7 +101,7 @@ void test_tag_storage(void) {
   // equivalent results in a physically different tag set having all
   // members the same except for the index
   t2 = get_tag_set(tags, "s,foo=bar,");
-  sput_fail_unless(t2->index == 1, "index");
+  sput_fail_unless(t2->index == 2, "index");
   check_tags_equal(t1, t2, "equivalent except index");
 }
 

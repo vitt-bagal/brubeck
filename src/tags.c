@@ -45,7 +45,7 @@ bool brubeck_tags_insert(brubeck_tags_t *tags, const char *key,
   pthread_mutex_lock(&tags->write_mutex);
   result = ck_ht_put_spmc(&tags->table, h, &entry);
   if (result) {
-    val->index = (tags->num_tag_sets)++;
+    val->index = ++(tags->num_tag_sets);
   }
   pthread_mutex_unlock(&tags->write_mutex);
   return result;
