@@ -40,7 +40,8 @@ static void carbon_disconnect(struct brubeck_carbon *self) {
   self->out_sock = -1;
 }
 
-static void plaintext_each(const char *key, value_t value, void *backend) {
+static void plaintext_each(const struct brubeck_metric *metric, const char *key,
+                           value_t value, void *backend) {
   struct brubeck_carbon *carbon = (struct brubeck_carbon *)backend;
   char buffer[1024];
   char *ptr = buffer;
@@ -49,6 +50,11 @@ static void plaintext_each(const char *key, value_t value, void *backend) {
 
   if (!carbon_is_connected(carbon))
     return;
+
+  if (strchr(key, ' ') != NULL) {
+    /* Invalid metric, can't have a space */
+    return;
+  }
 
   memcpy(ptr, key, key_len);
   ptr += key_len;
@@ -159,8 +165,15 @@ static void pickle1_flush(void *backend) {
   carbon->bytes_sent += wr;
 }
 
-static void pickle1_each(const char *key, value_t value, void *backend) {
+static void pickle1_each(const struct brubeck_metric *metric, const char *key,
+                         value_t value, void *backend) {
   struct brubeck_carbon *carbon = (struct brubeck_carbon *)backend;
+
+  if (strchr(key, ' ') != NULL) {
+    /* Invalid metric, can't have a space */
+    return;
+  }
+
   uint8_t key_len = (uint8_t)strlen(key);
 
   if (carbon->pickler.pos + PICKLE1_SIZE(key_len) >= PICKLE_BUFFER_SIZE) {

@@ -14,6 +14,8 @@ void test_mstore__save(void);
 void test_atomic_spinlocks(void);
 void test_ftoa(void);
 void test_statsd_msg__parse_strings(void);
+void test_tag_parsing(void);
+void test_tag_storage(void);
 
 int main(int argc, char *argv[]) {
   sput_start_testing();
@@ -37,6 +39,11 @@ int main(int argc, char *argv[]) {
 
   sput_enter_suite("statsd: packet parsing");
   sput_run_test(test_statsd_msg__parse_strings);
+
+  sput_enter_suite("tags: associative key value parsing");
+  sput_run_test(test_tag_parsing);
+  sput_run_test(test_tag_storage);
+  sput_run_test(test_tag_offset);
 
   sput_finish_testing();
   return sput_get_return_value();

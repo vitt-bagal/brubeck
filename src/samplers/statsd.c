@@ -149,9 +149,6 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer,
     msg->key = buffer;
     msg->key_len = 0;
     while (*buffer != ':' && *buffer != '\0') {
-      /* Invalid metric, can't have a space */
-      if (*buffer == ' ')
-        return -1;
       ++buffer;
     }
     if (*buffer == '\0')

@@ -10,6 +10,7 @@ int main(int argc, char *argv[]) {
       {NULL, 0, NULL, 0}};
 
   struct brubeck_server server;
+  memset(&server, 0x0, sizeof(struct brubeck_server));
   server.set_proctitle = true;
   const char *config_file = "config.default.json";
   const char *log_file = NULL;

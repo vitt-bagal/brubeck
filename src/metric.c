@@ -4,6 +4,14 @@ static inline struct brubeck_metric *new_metric(struct brubeck_server *server,
                                                 const char *key, size_t key_len,
                                                 uint8_t type) {
   struct brubeck_metric *metric;
+  const struct brubeck_tag_set *tags = NULL;
+
+  if (server->tags) {
+    tags = brubeck_get_tag_set(server->tags, key, key_len);
+    if (tags)
+      // we have parsed the tags, remove them from the metric
+      key_len = key_len - tags->tag_len;
+  }
 
   /* slab allocation cannot fail */
   metric = brubeck_slab_alloc(&server->slab,
@@ -11,6 +19,7 @@ static inline struct brubeck_metric *new_metric(struct brubeck_server *server,
 
   memset(metric, 0x0, sizeof(struct brubeck_metric));
 
+  metric->tags = tags;
   memcpy(metric->key, key, key_len);
   metric->key[key_len] = '\0';
   metric->key_len = (uint16_t)key_len;
@@ -21,10 +30,6 @@ static inline struct brubeck_metric *new_metric(struct brubeck_server *server,
 
 #ifdef BRUBECK_METRICS_FLOW
   metric->flow = 0;
-#else
-  /* Compile time assert: ensure that the metric struct can be packed
-   * in a single slab */
-  ct_assert(sizeof(struct brubeck_metric) <= (SLAB_SIZE));
 #endif
 
   return metric;
@@ -61,7 +66,7 @@ static void gauge__sample(struct brubeck_metric *metric,
   { value = metric->as.gauge.value; }
   pthread_spin_unlock(&metric->lock);
 
-  sample(metric->key, value, opaque);
+  sample(metric, metric->key, value, opaque);
 }
 
 /*********************************************
@@ -90,7 +95,7 @@ static void meter__sample(struct brubeck_metric *metric,
   }
   pthread_spin_unlock(&metric->lock);
 
-  sample(metric->key, value, opaque);
+  sample(metric, metric->key, value, opaque);
 }
 
 /*********************************************
@@ -129,7 +134,7 @@ static void counter__sample(struct brubeck_metric *metric,
   }
   pthread_spin_unlock(&metric->lock);
 
-  sample(metric->key, value, opaque);
+  sample(metric, metric->key, value, opaque);
 }
 
 /*********************************************
@@ -159,11 +164,11 @@ static void histogram__sample(struct brubeck_metric *metric,
   key = alloca(metric->key_len + strlen(".percentile.999") + 1);
   memcpy(key, metric->key, metric->key_len);
 
-  WITH_SUFFIX(".count") { sample(key, hsample.count, opaque); }
+  WITH_SUFFIX(".count") { sample(metric, key, hsample.count, opaque); }
 
   WITH_SUFFIX(".count_ps") {
     struct brubeck_backend *backend = opaque;
-    sample(key, hsample.count / (double)backend->sample_freq, opaque);
+    sample(metric, key, hsample.count / (double)backend->sample_freq, opaque);
   }
 
   /* if there have been no metrics during this sampling period,
@@ -171,34 +176,34 @@ static void histogram__sample(struct brubeck_metric *metric,
   if (hsample.count == 0.0)
     return;
 
-  WITH_SUFFIX(".min") { sample(key, hsample.min, opaque); }
+  WITH_SUFFIX(".min") { sample(metric, key, hsample.min, opaque); }
 
-  WITH_SUFFIX(".max") { sample(key, hsample.max, opaque); }
+  WITH_SUFFIX(".max") { sample(metric, key, hsample.max, opaque); }
 
-  WITH_SUFFIX(".sum") { sample(key, hsample.sum, opaque); }
+  WITH_SUFFIX(".sum") { sample(metric, key, hsample.sum, opaque); }
 
-  WITH_SUFFIX(".mean") { sample(key, hsample.mean, opaque); }
+  WITH_SUFFIX(".mean") { sample(metric, key, hsample.mean, opaque); }
 
-  WITH_SUFFIX(".median") { sample(key, hsample.median, opaque); }
+  WITH_SUFFIX(".median") { sample(metric, key, hsample.median, opaque); }
 
   WITH_SUFFIX(".percentile.75") {
-    sample(key, hsample.percentile[PC_75], opaque);
+    sample(metric, key, hsample.percentile[PC_75], opaque);
   }
 
   WITH_SUFFIX(".percentile.95") {
-    sample(key, hsample.percentile[PC_95], opaque);
+    sample(metric, key, hsample.percentile[PC_95], opaque);
   }
 
   WITH_SUFFIX(".percentile.98") {
-    sample(key, hsample.percentile[PC_98], opaque);
+    sample(metric, key, hsample.percentile[PC_98], opaque);
   }
 
   WITH_SUFFIX(".percentile.99") {
-    sample(key, hsample.percentile[PC_99], opaque);
+    sample(metric, key, hsample.percentile[PC_99], opaque);
   }
 
   WITH_SUFFIX(".percentile.999") {
-    sample(key, hsample.percentile[PC_999], opaque);
+    sample(metric, key, hsample.percentile[PC_999], opaque);
   }
 }
 

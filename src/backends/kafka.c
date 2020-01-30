@@ -10,7 +10,12 @@ static int kafka_shutdown(void *backend) {
   rd_kafka_resp_err_t err;
 
   self->connected = false;
-  json_decref(self->json);
+
+  int i;
+  for (i = 0; i < vector_size(self->documents); ++i) {
+    if (self->documents[i] != NULL)
+      json_decref(self->documents[i]->json);
+  }
 
   /* Fatal error handling.
    *
@@ -110,11 +115,31 @@ static int kafka_connect(void *backend) {
     return -1;
 }
 
-static void each_metric(const char *key, value_t value, void *backend) {
+static void each_metric(const struct brubeck_metric *metric, const char *key,
+                        value_t value, void *backend) {
   struct brubeck_kafka *self = (struct brubeck_kafka *)backend;
 
-  json_object_set_new_nocheck(self->json, key, json_real(value));
-  self->doc_is_dirty = true;
+  uint32_t tag_index = 0;
+  if (metric->tags != NULL)
+    tag_index = metric->tags->index;
+  struct brubeck_kafka_document *doc = vector_get(self->documents, tag_index);
+  if (doc == NULL) {
+    doc = malloc(sizeof(struct brubeck_kafka_document));
+    doc->is_dirty = false;
+    doc->json = json_object();
+    vector_set(self->documents, tag_index, doc);
+  }
+
+  if (doc->is_dirty == false && metric->tags != NULL) {
+    uint16_t i;
+    for (i = 0; i < metric->tags->num_tags; ++i) {
+      json_object_set_new_nocheck(doc->json, metric->tags->tags[i].key,
+                                  json_string(metric->tags->tags[i].value));
+    }
+  }
+
+  json_object_set_new_nocheck(doc->json, key, json_real(value));
+  doc->is_dirty = true;
 }
 
 static void kafka_flush(void *backend) {
@@ -123,30 +148,37 @@ static void kafka_flush(void *backend) {
   char *buf;
   size_t len;
   int64_t epoch_ms;
+  json_t *json_epoch_ms;
 
-  if (self->doc_is_dirty) {
-    self->doc_is_dirty = false;
-    epoch_ms = (int64_t) self->backend.tick_time;
-    epoch_ms *= 1000;
-    json_object_set_new_nocheck(self->json, "@timestamp",
-                                json_integer(epoch_ms));
+  epoch_ms = (int64_t)self->backend.tick_time;
+  epoch_ms *= 1000;
+  json_epoch_ms = json_integer(epoch_ms);
 
-    buf = json_dumps(self->json, JSON_COMPACT);
-    len = strlen(buf);
-    err = rd_kafka_producev(self->rk, RD_KAFKA_V_TOPIC(self->topic),
-                            RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_FREE),
-                            RD_KAFKA_V_VALUE(buf, len), RD_KAFKA_V_OPAQUE(NULL),
-                            RD_KAFKA_V_END);
-    if (err) {
-      log_splunk("backend=kafka event=failed_to_enqueue msg=\"%s\"",
-                 rd_kafka_err2str(err));
-      free(buf);
-    } else {
-      self->bytes_sent += len;
+  int i;
+  struct brubeck_kafka_document *doc;
+  for (i = 0; i < vector_size(self->documents); ++i) {
+    doc = self->documents[i];
+    if (doc != NULL && doc->is_dirty) {
+      json_object_set_nocheck(doc->json, "@timestamp", json_epoch_ms);
+      buf = json_dumps(doc->json, JSON_COMPACT);
+      len = strlen(buf);
+      err = rd_kafka_producev(self->rk, RD_KAFKA_V_TOPIC(self->topic),
+                              RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_FREE),
+                              RD_KAFKA_V_VALUE(buf, len),
+                              RD_KAFKA_V_OPAQUE(NULL), RD_KAFKA_V_END);
+      if (err) {
+        log_splunk("backend=kafka event=failed_to_enqueue msg=\"%s\"",
+                   rd_kafka_err2str(err));
+        free(buf);
+      } else {
+        self->bytes_sent += len;
+      }
+      json_object_clear(doc->json);
+      doc->is_dirty = false;
+      rd_kafka_poll(self->rk, 0);
     }
-    json_object_clear(self->json);
   }
-  rd_kafka_poll(self->rk, 0);
+  json_decref(json_epoch_ms);
 }
 
 static rd_kafka_conf_t *build_rdkafka_config(json_t *json) {
@@ -183,8 +215,6 @@ struct brubeck_backend *brubeck_kafka_new(struct brubeck_server *server,
   conf = build_rdkafka_config(rdkafka_config);
 
   self->connected = true;
-  self->doc_is_dirty = false;
-  self->json = json_object();
   self->backend.type = BRUBECK_BACKEND_KAFKA;
   self->backend.connect = &kafka_connect;
   self->backend.is_connected = &kafka_is_connected;

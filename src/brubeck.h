@@ -39,6 +39,10 @@ struct brubeck_metric;
 #include "sampler.h"
 #include "server.h"
 #include "slab.h"
+#include "tags.h"
 #include "utils.h"
+
+#define LOGARITHMIC_GROWTH
+#include "vector.h"
 
 #endif
