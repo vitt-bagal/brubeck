@@ -259,8 +259,7 @@ struct brubeck_metric *brubeck_metric_new(struct brubeck_server *server,
   if (!metric)
     return NULL;
 
-  if (!brubeck_hashtable_insert(server->metrics, metric->key, metric->key_len,
-                                metric))
+  if (!brubeck_hashtable_insert(server->metrics, key, key_len, metric))
     return brubeck_hashtable_find(server->metrics, key, key_len);
 
   brubeck_backend_register_metric(brubeck_metric_shard(server, metric), metric);
