@@ -204,7 +204,8 @@ static rd_kafka_conf_t *build_rdkafka_config(json_t *json) {
 
 struct brubeck_backend *brubeck_kafka_new(struct brubeck_server *server,
                                           json_t *settings, int shard_n) {
-  struct brubeck_kafka *self = xcalloc(1, sizeof(struct brubeck_kafka));
+  struct brubeck_kafka *self = xmalloc(sizeof(struct brubeck_kafka));
+  memset(self, 0x0, sizeof(struct brubeck_kafka));
   int frequency = 0;
   json_t *rdkafka_config;
   rd_kafka_conf_t *conf;

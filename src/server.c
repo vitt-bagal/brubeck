@@ -22,7 +22,7 @@ static void update_flows(struct brubeck_server *server) {
 #define UTF8_DOWNARROW "\xE2\x86\x93"
 
 static void update_proctitle(struct brubeck_server *server) {
-  if (true || server->set_proctitle) {
+  if (server->set_proctitle) {
     static const char *size_suffix[] = {"b",  "kb", "mb", "gb",
                                         "tb", "pb", "eb"};
 #define PUTS(...) pos += snprintf(buf + pos, sizeof(buf) - pos, __VA_ARGS__)
