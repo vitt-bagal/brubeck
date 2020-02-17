@@ -97,6 +97,8 @@ bool parse_tag(char *kv_str, struct brubeck_tag *tag) {
   return true;
 }
 
+/* tag_str may be mutated and must remain accessible for the life of
+   the brubeck_tag_set */
 struct brubeck_tag_set *brubeck_parse_tags(char *tag_str,
                                            uint16_t tag_str_len) {
   char *state;
@@ -128,11 +130,20 @@ brubeck_get_tag_set_of_tag_str(struct brubeck_tags_t *tags, const char *tag_str,
   tag_set = brubeck_tags_find(tags, tag_str, tag_str_len);
 
   if (tag_set == NULL) {
-    char *tag_str_copy = strdup(tag_str);
-    tag_set = brubeck_parse_tags(tag_str_copy, tag_str_len);
-    if (!brubeck_tags_insert(tags, tag_str, tag_str_len, tag_set)) {
-      free(tag_str_copy);
+    /* two copies are necessary because
+       - tag_str is a piece of a buffer that will change when receiving future
+       messages
+       - creating a brubeck_tag_set consumes and modifies a tag string
+       - hash table storage requires an unmodified key to be accessible for the
+       life of the hash table entry
+    */
+    char *tag_str_for_parse = strdup(tag_str);
+    const char *tag_str_for_key = strdup(tag_str);
+    tag_set = brubeck_parse_tags(tag_str_for_parse, tag_str_len);
+    if (!brubeck_tags_insert(tags, tag_str_for_key, tag_str_len, tag_set)) {
       free(tag_set);
+      free(tag_str_for_parse);
+      free(tag_str_for_key);
       tag_set = brubeck_tags_find(tags, tag_str, tag_str_len);
     }
   }
