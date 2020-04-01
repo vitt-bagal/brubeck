@@ -29,8 +29,14 @@ static void *backend__thread(void *_ptr) {
       self->tick_time = now.tv_sec;
 
       for (mt = self->queue; mt; mt = mt->next) {
-        if (mt->expire > BRUBECK_EXPIRE_DISABLED)
+        const uint8_t state = brubeck_metric_get_state(mt);
+        if (state == BRUBECK_STATE_ACTIVE) {
           brubeck_metric_sample(mt, self->sample, self);
+          brubeck_metric_set_state_if_equal(mt, state, BRUBECK_STATE_INACTIVE);
+        } else if (state == BRUBECK_STATE_INACTIVE) {
+          brubeck_metric_sample(mt, self->sample, self);
+          brubeck_metric_set_state_if_equal(mt, state, BRUBECK_STATE_DISABLED);
+        }
       }
 
       if (self->flush)

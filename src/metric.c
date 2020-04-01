@@ -24,7 +24,7 @@ static inline struct brubeck_metric *new_metric(struct brubeck_server *server,
   metric->key[key_len] = '\0';
   metric->key_len = (uint16_t)key_len;
 
-  metric->expire = BRUBECK_EXPIRE_ACTIVE;
+  brubeck_metric_set_state(metric, BRUBECK_STATE_ACTIVE);
   metric->type = type;
   pthread_spin_init(&metric->lock, PTHREAD_PROCESS_PRIVATE);
 
@@ -239,6 +239,7 @@ void brubeck_metric_sample(struct brubeck_metric *metric, brubeck_sample_cb cb,
 
 void brubeck_metric_record(struct brubeck_metric *metric, value_t value,
                            value_t sample_freq, uint8_t modifiers) {
+  brubeck_metric_set_state(metric, BRUBECK_STATE_ACTIVE);
   _prototypes[metric->type].record(metric, value, sample_freq, modifiers);
 }
 
@@ -288,6 +289,5 @@ struct brubeck_metric *brubeck_metric_find(struct brubeck_server *server,
   brubeck_atomic_inc(&metric->flow);
 #endif
 
-  metric->expire = BRUBECK_EXPIRE_ACTIVE;
   return metric;
 }

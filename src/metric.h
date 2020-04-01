@@ -21,9 +21,9 @@ enum brubeck_aggregate_t {
 };
 
 enum {
-  BRUBECK_EXPIRE_DISABLED = 0,
-  BRUBECK_EXPIRE_INACTIVE = 1,
-  BRUBECK_EXPIRE_ACTIVE = 2
+  BRUBECK_STATE_DISABLED = 0,
+  BRUBECK_STATE_INACTIVE = 1,
+  BRUBECK_STATE_ACTIVE = 2
 };
 
 struct brubeck_metric {
@@ -37,7 +37,7 @@ struct brubeck_metric {
   pthread_spinlock_t lock;
   uint16_t key_len;
   uint8_t type;
-  uint8_t expire;
+  uint8_t private_state;
 
   union {
     struct {
@@ -68,7 +68,22 @@ struct brubeck_metric *brubeck_metric_find(struct brubeck_server *server,
                                            const char *, size_t, uint8_t);
 struct brubeck_backend *brubeck_metric_shard(struct brubeck_server *server,
                                              struct brubeck_metric *);
+static inline const uint8_t
+brubeck_metric_get_state(const struct brubeck_metric *metric) {
+  return __atomic_load_n(&metric->private_state, __ATOMIC_SEQ_CST);
+}
 
+static inline void brubeck_metric_set_state(struct brubeck_metric *metric,
+                                            const uint8_t state) {
+  __atomic_store_n(&metric->private_state, state, __ATOMIC_SEQ_CST);
+}
+
+static inline bool
+brubeck_metric_set_state_if_equal(struct brubeck_metric *metric,
+                                  uint8_t expected, const uint8_t state) {
+  return __atomic_compare_exchange_n(&metric->private_state, &expected, state,
+                                     false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+}
 #define WITH_SUFFIX(suffix)                                                    \
   memcpy(key + metric->key_len, suffix, strlen(suffix) + 1);
 

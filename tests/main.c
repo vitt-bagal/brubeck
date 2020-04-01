@@ -16,6 +16,7 @@ void test_ftoa(void);
 void test_statsd_msg__parse_strings(void);
 void test_tag_parsing(void);
 void test_tag_storage(void);
+void test_tag_offset(void);
 
 int main(int argc, char *argv[]) {
   sput_start_testing();
