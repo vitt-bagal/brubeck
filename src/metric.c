@@ -255,14 +255,17 @@ struct brubeck_metric *brubeck_metric_new(struct brubeck_server *server,
                                           const char *key, size_t key_len,
                                           uint8_t type) {
   struct brubeck_metric *metric;
+  // key is part of a shared buffer that will change, so a copy is required
+  char *key_for_ht = strndup(key, key_len);
 
   metric = new_metric(server, key, key_len, type);
   if (!metric)
     return NULL;
 
-  if (!brubeck_hashtable_insert(server->metrics, key, key_len, metric))
+  if (!brubeck_hashtable_insert(server->metrics, key_for_ht, key_len, metric)) {
+    free(key_for_ht);
     return brubeck_hashtable_find(server->metrics, key, key_len);
-
+  }
   brubeck_backend_register_metric(brubeck_metric_shard(server, metric), metric);
 
   /* Record internal stats */
