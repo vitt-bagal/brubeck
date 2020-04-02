@@ -138,7 +138,7 @@ brubeck_get_tag_set_of_tag_str(struct brubeck_tags_t *tags, const char *tag_str,
        life of the hash table entry
     */
     char *tag_str_for_parse = strdup(tag_str);
-    const char *tag_str_for_key = strdup(tag_str);
+    char *tag_str_for_key = strdup(tag_str);
     tag_set = brubeck_parse_tags(tag_str_for_parse, tag_str_len);
     if (!brubeck_tags_insert(tags, tag_str_for_key, tag_str_len, tag_set)) {
       free(tag_set);

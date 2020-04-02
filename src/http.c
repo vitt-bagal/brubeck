@@ -59,7 +59,7 @@ static struct MHD_Response *expire_metric(struct brubeck_server *server,
       safe_lookup_metric(server, url + strlen("/expire/"));
 
   if (metric) {
-    metric->expire = BRUBECK_EXPIRE_DISABLED;
+    brubeck_metric_set_state(metric, BRUBECK_STATE_DISABLED);
     return MHD_create_response_from_data(0, "", 0, 0);
   }
   return NULL;
@@ -75,14 +75,15 @@ static struct MHD_Response *send_metric(struct brubeck_server *server,
       safe_lookup_metric(server, url + strlen("/metric/"));
 
   if (metric) {
-    json_t *mj = json_pack("{s:s, s:s, s:i, s:s}", "key", metric->key, "type",
-                           metric_types[metric->type],
+    json_t *mj =
+        json_pack("{s:s, s:s, s:i, s:s}", "key", metric->key, "type",
+                  metric_types[metric->type],
 #if METRIC_SHARD_SPECIFIER
-                           "shard", (int)metric->shard,
+                  "shard", (int)metric->shard,
 #else
-                           "shard", 0,
+                  "shard", 0,
 #endif
-                           "expire", expire_status[metric->expire]);
+                  "expire", expire_status[brubeck_metric_get_state(metric)]);
 
     char *jsonr = json_dumps(mj, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
     json_decref(mj);

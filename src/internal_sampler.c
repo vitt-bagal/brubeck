@@ -57,7 +57,7 @@ void brubeck_internal__sample(struct brubeck_metric *metric,
    * Mark the metric as active so it doesn't get disabled
    * by the inactive metrics pruner
    */
-  metric->expire = BRUBECK_EXPIRE_ACTIVE;
+  brubeck_metric_set_state(metric, BRUBECK_STATE_ACTIVE);
 }
 
 void brubeck_internal__init(struct brubeck_server *server) {
