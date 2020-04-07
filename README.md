@@ -166,6 +166,7 @@ incoming metrics from the network.
 
         - `"multimsg" : 1` if set to greater than one, Brubeck will use the `recvmmsg` syscall (available since Linux 2.6.33) to read several UDP packets (the specified amount) in a single call and reduce the amount of context switches. This doesn't improve performance much with several worker threads, but may have an effect in a limited configuration with only one thread. Make it a power of two for better results. As always, benchmark. YMMV.
 
+        - `"scale_timers_by" : 1` The StatsD protocol reports timers in milliseconds, which may not have been the best choice but is the standard. If you'd like to normalize to seconds, set to 0.001.
     - `statsd-secure`: like StatsD, but each packet has a HMAC that verifies its integrity. This is hella useful if you're running infrastructure in The Cloud (TM) (C) and you want to send back packets back to your VPN without them being tampered by third parties.
 
         ```

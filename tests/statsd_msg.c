@@ -10,8 +10,9 @@ static void must_parse(const char *msg_text, double value, double sample,
   size_t len = strlen(msg_text);
   memcpy(buffer, msg_text, len);
 
-  sput_fail_unless(brubeck_statsd_msg_parse(&msg, buffer, buffer + len) == 0,
-                   msg_text);
+  sput_fail_unless(
+      brubeck_statsd_msg_parse(&msg, buffer, buffer + len, 0.001) == 0,
+      msg_text);
   sput_fail_unless(value == msg.value, "msg.value == expected");
   sput_fail_unless(sample == msg.sample_freq, "msg.sample_rate == expected");
   sput_fail_unless(modifiers == msg.modifiers, "msg.modifiers == expected");
@@ -23,7 +24,8 @@ static void must_not_parse(const char *msg_text) {
   size_t len = strlen(msg_text);
   memcpy(buffer, msg_text, len);
 
-  sput_fail_unless(brubeck_statsd_msg_parse(&msg, buffer, buffer + len) < 0,
+  sput_fail_unless(brubeck_statsd_msg_parse(&msg, buffer, buffer + len, 0.001) <
+                       0,
                    msg_text);
 }
 
@@ -31,7 +33,7 @@ void test_statsd_msg__parse_strings(void) {
   must_parse("github.auth.fingerprint.sha1:1|c", 1, 1.0, 0);
   must_parse("github.auth.fingerprint.sha1:1|c|@0.1", 1, 10.0, 0);
   must_parse("github.auth.fingerprint.sha1:1|g", 1, 1.0, 0);
-  must_parse("lol:1|ms", 1, 1.0, 0);
+  must_parse("lol:2|ms", 0.002, 1.0, 0);
   must_parse("this.is.sparta:199812|C", 199812, 1.0, 0);
   must_parse("this.is.sparta:0012|h", 12, 1.0, 0);
   must_parse("this.is.sparta:23.23|g", 23.23, 1.0, 0);

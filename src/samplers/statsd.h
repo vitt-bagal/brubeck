@@ -17,6 +17,7 @@ struct brubeck_statsd {
   pthread_t *workers;
   unsigned int worker_count;
   unsigned int mmsg_count;
+  double scale_timers_by;
 };
 
 struct brubeck_statsd_secure {
@@ -31,9 +32,9 @@ struct brubeck_statsd_secure {
 };
 
 void brubeck_statsd_packet_parse(struct brubeck_server *server, char *buffer,
-                                 char *end);
+                                 char *end, const double);
 int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer,
-                             char *end);
+                             char *end, const double);
 
 struct brubeck_sampler *brubeck_statsd_secure_new(struct brubeck_server *server,
                                                   json_t *settings);

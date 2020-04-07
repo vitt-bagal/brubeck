@@ -56,7 +56,7 @@ static void statsd_run_recvmmsg(struct brubeck_statsd *statsd, int sock) {
     for (i = 0; i < res; ++i) {
       char *buf = msgs[i].msg_hdr.msg_iov->iov_base;
       char *end = buf + msgs[i].msg_len;
-      brubeck_statsd_packet_parse(server, buf, end);
+      brubeck_statsd_packet_parse(server, buf, end, statsd->scale_timers_by);
     }
   }
 }
@@ -88,7 +88,8 @@ static void statsd_run_recvmsg(struct brubeck_statsd *statsd, int sock) {
     }
 
     brubeck_atomic_inc(&statsd->sampler.inflow);
-    brubeck_statsd_packet_parse(server, buffer, buffer + res);
+    brubeck_statsd_packet_parse(server, buffer, buffer + res,
+                                statsd->scale_timers_by);
   }
 }
 
@@ -136,7 +137,7 @@ static inline char *parse_float(char *buffer, value_t *result, uint8_t *mods) {
 }
 
 int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer,
-                             char *end) {
+                             char *end, const double scale_timers_by) {
   *end = '\0';
 
   /**
@@ -204,6 +205,7 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer,
       ++buffer;
       if (*buffer == 's') {
         msg->type = BRUBECK_MT_TIMER;
+        msg->value *= scale_timers_by;
         break;
       }
 
@@ -243,7 +245,7 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer,
 }
 
 void brubeck_statsd_packet_parse(struct brubeck_server *server, char *buffer,
-                                 char *end) {
+                                 char *end, const double scale_timers_by) {
   struct brubeck_statsd_msg msg;
   struct brubeck_metric *metric;
 
@@ -252,7 +254,7 @@ void brubeck_statsd_packet_parse(struct brubeck_server *server, char *buffer,
     if (!stat_end)
       stat_end = end;
 
-    if (brubeck_statsd_msg_parse(&msg, buffer, stat_end) < 0) {
+    if (brubeck_statsd_msg_parse(&msg, buffer, stat_end, scale_timers_by) < 0) {
       brubeck_stats_inc(server, errors);
       log_splunk("sampler=statsd event=packet_drop");
     } else {
@@ -323,10 +325,12 @@ struct brubeck_sampler *brubeck_statsd_new(struct brubeck_server *server,
   std->sampler.in_sock = -1;
   std->worker_count = 4;
   std->mmsg_count = 1;
+  std->scale_timers_by = 1.;
 
-  json_unpack_or_die(settings, "{s:s, s:i, s?:i, s?:i, s?:b}", "address",
+  json_unpack_or_die(settings, "{s:s, s:i, s?:i, s?:i, s?:b, s?:F}", "address",
                      &address, "port", &port, "workers", &std->worker_count,
-                     "multimsg", &std->mmsg_count, "multisock", &multisock);
+                     "multimsg", &std->mmsg_count, "multisock", &multisock,
+                     "scale_timers_by", &std->scale_timers_by);
 
   brubeck_sampler_init_inet(&std->sampler, server, address, port);
 
