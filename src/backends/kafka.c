@@ -130,10 +130,17 @@ static void each_metric(const struct brubeck_metric *metric, const char *key,
     vector_set(self->documents, tag_index, doc);
   }
 
-  if (doc->is_dirty == false && metric->tags != NULL) {
+  if (doc->is_dirty == false && metric->tags != NULL &&
+      metric->tags->num_tags > 0) {
+    json_t *tag_destination = doc->json;
+    if (self->tag_subdocument != NULL) {
+      tag_destination = json_object();
+      json_object_set_new_nocheck(doc->json, self->tag_subdocument,
+                                  tag_destination);
+    }
     uint16_t i;
     for (i = 0; i < metric->tags->num_tags; ++i) {
-      json_object_set_new_nocheck(doc->json, metric->tags->tags[i].key,
+      json_object_set_new_nocheck(tag_destination, metric->tags->tags[i].key,
                                   json_string(metric->tags->tags[i].value));
     }
   }
@@ -210,9 +217,9 @@ struct brubeck_backend *brubeck_kafka_new(struct brubeck_server *server,
   json_t *rdkafka_config;
   rd_kafka_conf_t *conf;
 
-  json_unpack_or_die(settings, "{s:s, s:i, s:o}", "topic", &self->topic,
-                     "frequency", &frequency, "rdkafka_config",
-                     &rdkafka_config);
+  json_unpack_or_die(settings, "{s:s, s:i, s:o, s?:s}", "topic", &self->topic,
+                     "frequency", &frequency, "rdkafka_config", &rdkafka_config,
+                     "tag_subdocument", &self->tag_subdocument);
   conf = build_rdkafka_config(rdkafka_config);
 
   self->connected = true;

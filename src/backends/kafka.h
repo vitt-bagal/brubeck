@@ -15,6 +15,7 @@ struct brubeck_kafka {
   rd_kafka_t *rk; /* Producer instance handle */
   bool connected;
   const char *topic;
+  const char *tag_subdocument;
   size_t bytes_sent;
   struct brubeck_kafka_document **documents;
 };
