@@ -95,7 +95,7 @@ static struct MHD_Response *send_metric(struct brubeck_server *server,
 
 static struct MHD_Response *send_stats(struct brubeck_server *brubeck) {
   char *jsonr;
-  json_t *stats, *secure, *backends, *samplers;
+  json_t *stats, *backends, *samplers;
   int i;
 
   backends = json_array();
@@ -140,9 +140,6 @@ static struct MHD_Response *send_stats(struct brubeck_server *brubeck) {
     case BRUBECK_SAMPLER_STATSD:
       sampler_name = "statsd";
       break;
-    case BRUBECK_SAMPLER_STATSD_SECURE:
-      sampler_name = "statsd_secure";
-      break;
     default:
       assert(0);
     }
@@ -156,19 +153,11 @@ static struct MHD_Response *send_stats(struct brubeck_server *brubeck) {
                   "port", (int)ntohs(address->sin_port)));
   }
 
-  secure =
-      json_pack("{s:i, s:i, s:i, s:i}", "failed",
-                brubeck_stats_sample(brubeck, secure.failed), "from_future",
-                brubeck_stats_sample(brubeck, secure.from_future), "delayed",
-                brubeck_stats_sample(brubeck, secure.delayed), "replayed",
-                brubeck_stats_sample(brubeck, secure.replayed));
-
   stats = json_pack("{s:s, s:i, s:i, s:i, s:o, s:o, s:o}", "version",
                     "brubeck " GIT_SHA, "metrics",
                     brubeck_stats_sample(brubeck, metrics), "errors",
                     brubeck_stats_sample(brubeck, errors), "unique_keys",
-                    brubeck_stats_sample(brubeck, unique_keys), "secure",
-                    secure, "backends", backends, "samplers", samplers);
+                    brubeck_stats_sample(brubeck, unique_keys), "backends", backends, "samplers", samplers);
 
   jsonr = json_dumps(stats, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
   json_decref(stats);
