@@ -3,7 +3,6 @@
 
 enum brubeck_sampler_t {
   BRUBECK_SAMPLER_STATSD,
-  BRUBECK_SAMPLER_STATSD_SECURE,
 };
 
 struct brubeck_sampler {
@@ -29,8 +28,6 @@ brubeck_sampler_name(struct brubeck_sampler *sampler) {
   switch (sampler->type) {
   case BRUBECK_SAMPLER_STATSD:
     return "statsd";
-  case BRUBECK_SAMPLER_STATSD_SECURE:
-    return "statsd-secure";
   default:
     return NULL;
   }

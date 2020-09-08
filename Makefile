@@ -1,6 +1,6 @@
 GIT_SHA = $(shell git rev-parse --short HEAD)
 TARGET = brubeck
-LIBS = -lm -pthread -lrt -lcrypto -ljansson -lrdkafka
+LIBS = -lm -pthread -lrt -ljansson -lrdkafka
 CC = gcc
 CXX = g++
 CFLAGS = -g -Wall -O3 -Wno-strict-aliasing -Isrc -Ivendor -Ivendor/ck/include -DNDEBUG=1 -DGIT_SHA=\"$(GIT_SHA)\"
@@ -23,7 +23,6 @@ SOURCES = \
 	src/log.c \
 	src/metric.c \
 	src/sampler.c \
-	src/samplers/statsd-secure.c \
 	src/samplers/statsd.c \
 	src/server.c \
 	src/setproctitle.c \

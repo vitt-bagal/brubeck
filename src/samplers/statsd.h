@@ -20,24 +20,11 @@ struct brubeck_statsd {
   double scale_timers_by;
 };
 
-struct brubeck_statsd_secure {
-  struct brubeck_sampler sampler;
-  const char *hmac_key;
-
-  struct multibloom *replays;
-  time_t now;
-  time_t drift;
-
-  pthread_t thread;
-};
-
 void brubeck_statsd_packet_parse(struct brubeck_server *server, char *buffer,
                                  char *end, const double);
 int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer,
                              char *end, const double);
 
-struct brubeck_sampler *brubeck_statsd_secure_new(struct brubeck_server *server,
-                                                  json_t *settings);
 struct brubeck_sampler *brubeck_statsd_new(struct brubeck_server *server,
                                            json_t *settings);
 
