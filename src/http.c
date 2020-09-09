@@ -37,7 +37,8 @@ static struct MHD_Response *flow_stats(struct brubeck_server *server) {
   jsonr = json_dumps(top_metrics_j, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
   json_decref(top_metrics_j);
 
-  return MHD_create_response_from_data(strlen(jsonr), jsonr, 1, 0);
+  return MHD_create_response_from_buffer(strlen(jsonr), jsonr,
+                                         MHD_RESPMEM_MUST_FREE);
 }
 
 #else
@@ -60,7 +61,7 @@ static struct MHD_Response *expire_metric(struct brubeck_server *server,
 
   if (metric) {
     brubeck_metric_set_state(metric, BRUBECK_STATE_DISABLED);
-    return MHD_create_response_from_data(0, "", 0, 0);
+    return MHD_create_response_from_buffer(0, "", MHD_RESPMEM_PERSISTENT);
   }
   return NULL;
 }
@@ -87,7 +88,8 @@ static struct MHD_Response *send_metric(struct brubeck_server *server,
 
     char *jsonr = json_dumps(mj, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
     json_decref(mj);
-    return MHD_create_response_from_data(strlen(jsonr), jsonr, 1, 0);
+    return MHD_create_response_from_buffer(strlen(jsonr), jsonr,
+                                           MHD_RESPMEM_MUST_FREE);
   }
 
   return NULL;
@@ -157,11 +159,13 @@ static struct MHD_Response *send_stats(struct brubeck_server *brubeck) {
                     "brubeck " GIT_SHA, "metrics",
                     brubeck_stats_sample(brubeck, metrics), "errors",
                     brubeck_stats_sample(brubeck, errors), "unique_keys",
-                    brubeck_stats_sample(brubeck, unique_keys), "backends", backends, "samplers", samplers);
+                    brubeck_stats_sample(brubeck, unique_keys), "backends",
+                    backends, "samplers", samplers);
 
   jsonr = json_dumps(stats, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
   json_decref(stats);
-  return MHD_create_response_from_data(strlen(jsonr), jsonr, 1, 0);
+  return MHD_create_response_from_buffer(strlen(jsonr), jsonr,
+                                         MHD_RESPMEM_MUST_FREE);
 }
 
 static struct MHD_Response *send_ping(struct brubeck_server *brubeck) {
@@ -190,7 +194,8 @@ static struct MHD_Response *send_ping(struct brubeck_server *brubeck) {
 
   jsonr = json_dumps(stats, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
   json_decref(stats);
-  return MHD_create_response_from_data(strlen(jsonr), jsonr, 1, 0);
+  return MHD_create_response_from_buffer(strlen(jsonr), jsonr,
+                                         MHD_RESPMEM_MUST_FREE);
 }
 
 static int handle_request(void *cls, struct MHD_Connection *connection,
@@ -220,8 +225,8 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
 
   if (!response) {
     static const char *NOT_FOUND = "404 not found";
-    response = MHD_create_response_from_data(strlen(NOT_FOUND),
-                                             (void *)NOT_FOUND, 0, 0);
+    response = MHD_create_response_from_buffer(
+        strlen(NOT_FOUND), (void *)NOT_FOUND, MHD_RESPMEM_PERSISTENT);
     MHD_add_response_header(response, "Connection", "close");
     ret = MHD_queue_response(connection, 404, response);
   } else {
