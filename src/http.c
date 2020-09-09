@@ -155,12 +155,12 @@ static struct MHD_Response *send_stats(struct brubeck_server *brubeck) {
                   "port", (int)ntohs(address->sin_port)));
   }
 
-  stats = json_pack("{s:s, s:i, s:i, s:i, s:o, s:o, s:o}", "version",
-                    "brubeck " GIT_SHA, "metrics",
-                    brubeck_stats_sample(brubeck, metrics), "errors",
-                    brubeck_stats_sample(brubeck, errors), "unique_keys",
-                    brubeck_stats_sample(brubeck, unique_keys), "backends",
-                    backends, "samplers", samplers);
+  stats =
+      json_pack("{s:s, s:i, s:i, s:i, s:o, s:o}", "version", "brubeck " GIT_SHA,
+                "metrics", brubeck_stats_sample(brubeck, metrics), "errors",
+                brubeck_stats_sample(brubeck, errors), "unique_keys",
+                brubeck_stats_sample(brubeck, unique_keys), "backends",
+                backends, "samplers", samplers);
 
   jsonr = json_dumps(stats, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
   json_decref(stats);

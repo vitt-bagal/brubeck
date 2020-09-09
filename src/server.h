@@ -10,13 +10,6 @@ struct brubeck_internal_stats {
     uint32_t metrics;
     uint32_t errors;
     uint32_t unique_keys;
-
-    struct {
-      uint32_t failed;
-      uint32_t from_future;
-      uint32_t delayed;
-      uint32_t replayed;
-    } secure;
   } live, sample;
 };
 

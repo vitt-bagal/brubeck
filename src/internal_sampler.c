@@ -1,6 +1,6 @@
 #include "brubeck.h"
 
-#define INTERNAL_LONGEST_KEY ".secure.from_future"
+#define INTERNAL_LONGEST_KEY ".unique_keys"
 
 void brubeck_internal__sample(struct brubeck_metric *metric,
                               brubeck_sample_cb sample, void *opaque) {
@@ -25,31 +25,6 @@ void brubeck_internal__sample(struct brubeck_metric *metric,
   WITH_SUFFIX(".unique_keys") {
     value = brubeck_atomic_fetch(&stats->live.unique_keys);
     stats->sample.unique_keys = value;
-    sample(metric, key, (value_t)value, opaque);
-  }
-
-  /* Secure statsd endpoint */
-  WITH_SUFFIX(".secure.failed") {
-    value = brubeck_atomic_swap(&stats->live.secure.failed, 0);
-    stats->sample.secure.failed = value;
-    sample(metric, key, (value_t)value, opaque);
-  }
-
-  WITH_SUFFIX(".secure.from_future") {
-    value = brubeck_atomic_swap(&stats->live.secure.from_future, 0);
-    stats->sample.secure.from_future = value;
-    sample(metric, key, (value_t)value, opaque);
-  }
-
-  WITH_SUFFIX(".secure.delayed") {
-    value = brubeck_atomic_swap(&stats->live.secure.delayed, 0);
-    stats->sample.secure.delayed = value;
-    sample(metric, key, (value_t)value, opaque);
-  }
-
-  WITH_SUFFIX(".secure.replayed") {
-    value = brubeck_atomic_swap(&stats->live.secure.replayed, 0);
-    stats->sample.secure.replayed = value;
     sample(metric, key, (value_t)value, opaque);
   }
 
