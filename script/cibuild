@@ -5,7 +5,6 @@ ROOT=$(dirname "$0")/..
 
 echo "=> Cleaning @ $(date)"
 git clean -fdx
-git submodule update --init
 
 echo "=> Building @ $(date)"
 cd $ROOT
